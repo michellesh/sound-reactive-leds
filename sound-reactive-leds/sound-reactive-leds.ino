@@ -17,9 +17,6 @@
  * FastLED            Arduino libraries manager
  * ArduinoFFT         Arduino libraries manager
  * EEPROM             Built in
- * WiFi               Built in
- * AsyncTCP           https://github.com/me-no-dev/ESPAsyncWebServer
- * ESPAsyncWebServer  https://github.com/me-no-dev/AsyncTCP
  * LEDMatrix          https://github.com/AaronLiddiment/LEDMatrix
  * LEDText            https://github.com/AaronLiddiment/LEDText
  * 
@@ -62,14 +59,18 @@
 #define EEPROM_PATTERN      3
 #define EEPROM_DISPLAY_TIME 4
 
+#define BRIGHTNESS_PIN 13
+#define GAIN_PIN 12
+#define SQUELCH_PIN 26
+#define BUTTON_PIN 25
+
 uint8_t numBands;
 uint8_t barWidth;
 uint8_t pattern;
 uint8_t brightness;
 uint16_t displayTime;
 bool autoChangePatterns = false;
-
-#include "web_server.h"
+int buttonState = 0;
 
 cLEDMatrix<M_WIDTH, M_HEIGHT, HORIZONTAL_ZIGZAG_MATRIX> leds;
 cLEDText ScrollingMsg;
@@ -108,7 +109,6 @@ void setup() {
   FastLED.addLeds<WS2812B, LED_PIN, GRB>(leds[0], NUM_LEDS);
   Serial.begin(57600);
 
-  setupWebServer();
   setupAudio();
 
   if (M_WIDTH == 8) numBands = 8;
@@ -137,10 +137,24 @@ void setup() {
   pattern = EEPROM.read(EEPROM_PATTERN);
   displayTime = EEPROM.read(EEPROM_DISPLAY_TIME);
 
-  if (WiFi.status() == WL_CONNECTED) showIP();
+  pinMode(BUTTON_PIN, INPUT);
 }  
 
 void loop() {
+  EVERY_N_MILLISECONDS(100) {
+    brightness = map(analogRead(BRIGHTNESS_PIN), 4095, 0, 0, 255);
+    gain = map(analogRead(GAIN_PIN), 4095, 0, 0, 30);
+    squelch = map(analogRead(SQUELCH_PIN), 4095, 0, 0, 30);
+
+    int buttonRead = digitalRead(BUTTON_PIN);
+    if (buttonRead == HIGH && buttonState == 0) {
+      buttonState = 1;
+      pattern = (pattern + 1) % 6; // Increment pattern
+    } else if (buttonRead == LOW && buttonState == 1) {
+      buttonState = 0;
+    }
+  }
+
   if (pattern != 5) FastLED.clear();
   
   uint8_t divisor = 1;                                                    // If 8 bands, we need to divide things by 2
@@ -190,8 +204,6 @@ void loop() {
   
   FastLED.setBrightness(brightness);
   FastLED.show();
-
-  ws.cleanupClients();
 }
 
 void drawPatterns(uint8_t band) {
@@ -242,23 +254,6 @@ void drawPatterns(uint8_t band) {
     case 5:
       // No peaks
       break;
-  }
-}
-
-void showIP(){
-  char strIP[16] = "               ";
-  IPAddress ip = WiFi.localIP();
-  ip.toString().toCharArray(strIP, 16);
-  Serial.println(strIP);
-  ScrollingMsg.SetFont(MatriseFontData);
-  ScrollingMsg.Init(&leds, leds.Width(), ScrollingMsg.FontHeight() + 1, 0, 0);
-  ScrollingMsg.SetText((unsigned char *)strIP, sizeof(strIP) - 1);
-  ScrollingMsg.SetTextColrOptions(COLR_RGB | COLR_SINGLE, 0xff, 0xff, 0xff);
-  ScrollingMsg.SetScrollDirection(SCROLL_LEFT);
-  ScrollingMsg.SetFrameRate(160 / M_WIDTH);       // Faster for larger matrices
-
-  while(ScrollingMsg.UpdateText() == 0) {
-    FastLED.show();  
   }
 }
 
