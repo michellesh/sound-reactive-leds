@@ -51,7 +51,7 @@
 #define EEPROM_SIZE 5
 #define LED_PIN 2
 #define M_WIDTH 8
-#define M_HEIGHT 12
+#define M_HEIGHT 18
 #define NUM_LEDS (M_WIDTH * M_HEIGHT)
 
 #define EEPROM_BRIGHTNESS 0
@@ -101,9 +101,14 @@ CRGBPalette16 greenbluePal = greenblue_gp;
 CRGBPalette16 heatPal = redyellow_gp;
 uint8_t colorTimer = 0;
 
+int MAX_BRIGHTNESS = 255;
+
 void setup() {
-  //FastLED.addLeds<WS2812B, LED_PIN, GRB>(leds, NUM_LEDS);
-  FastLED.addLeds<WS2812B, LED_PIN, RGB>(leds, NUM_LEDS);
+  // FastLED.addLeds<WS2812B, LED_PIN, GRB>(leds, NUM_LEDS); // LED matrix
+  FastLED.addLeds<WS2812B, LED_PIN, RGB>(leds, NUM_LEDS); // fairy lights
+  // FastLED.addLeds<WS2813, LED_PIN, GRB>(leds, NUM_LEDS) // WS2815s
+  //   .setCorrection(TypicalLEDStrip)
+  //   .setDither(MAX_BRIGHTNESS < 255);
   Serial.begin(57600);
 
   setupAudio();
@@ -149,14 +154,16 @@ void loop() {
     if (buttonRead == HIGH && buttonState == 0) {
       buttonState = 1;
       pattern = (pattern + 1) % 6; // Increment pattern
+      Serial.print("pattern: ");
+      Serial.println(pattern);
     } else if (buttonRead == LOW && buttonState == 1) {
       buttonState = 0;
     }
   }
 
   if (pattern != 5)
-    FastLED.clear();
-    //fadeLightBy(leds, NUM_LEDS, 50);
+    // FastLED.clear();
+    fadeToBlackBy(leds, 100, 20);
 
   uint8_t divisor = 1; // If 8 bands, we need to divide things by 2
   if (numBands == 8)
@@ -183,12 +190,28 @@ void loop() {
   }
 
   // Draw the patterns
-  //for (int band = 0; band < numBands; band++) {
+  // for (int band = 0; band < numBands; band++) {
   //  drawPatterns(band);
   //}
 
-  //barAverage();
-  barSum();
+  switch (pattern) {
+  case 0:
+    barSumRibCage();
+    break;
+  case 1:
+    twinkle();
+    break;
+  default:
+    for (int i = 0; i < NUM_LEDS; i++) {
+      leds[i] = CRGB::Red;
+    }
+    break;
+  }
+
+  // barAverage();
+  // barSum();
+  // barSumRibCage();
+  // barSumBike();
 
   // Decay peak
   EVERY_N_MILLISECONDS(60) {
@@ -215,6 +238,7 @@ void loop() {
 
   FastLED.setBrightness(brightness);
   FastLED.show();
+  delay(10);
 }
 
 void drawPatterns(uint8_t band) {
@@ -272,8 +296,8 @@ void drawPatterns(uint8_t band) {
 
 void rainbowBars(uint8_t band, uint8_t barHeight) {
   // from the beginning of each segment
-  //int iStart = M_WIDTH * band;
-  //for (int i = iStart; i < iStart + barHeight; i++) {
+  // int iStart = M_WIDTH * band;
+  // for (int i = iStart; i < iStart + barHeight; i++) {
   //  leds[i] = CHSV(band * (255 / numBands), 255, 255);
   //}
 
@@ -322,12 +346,67 @@ void barSum() {
   }
 }
 
-void purpleBars(int band, int barHeight) {
-  int xStart = barWidth * band;
-  for (int x = xStart; x < xStart + barWidth; x++) {
-    for (int y = 0; y < barHeight; y++) {
-      //leds(x, y) = ColorFromPalette(purplePal, y * (255 / barHeight));
+void barSumRibCage() {
+  int numLeds = 25;
+  int numSegments = 1;
+  int iStart[] = {0};
+  int segmentLength[] = {100};
+
+  int sum = 0;
+  for (int band = 0; band < numBands; band++) {
+    uint8_t barHeight = barHeights[band];
+    sum += barHeight;
+  }
+
+  for (int s = 0; s < numSegments; s++) {
+    int height = map(sum, 0, NUM_LEDS, 0, segmentLength[s]);
+    for (int x = 0; x < height; x++) {
+      int hue = map(x, 0, segmentLength[s], 0, 255);
+      leds[iStart[s] + x + 1] = CRGB(hue, 0, 0);
+      leds[iStart[s] + x + 26] = CRGB(hue, 0, 0);
+      leds[iStart[s] + x + 51] = CRGB(hue, 0, 0);
+      leds[iStart[s] + x + 75] = CRGB(hue, 0, 0);
     }
+  }
+}
+
+void barSumBike() {
+  int numLeds = 145;
+  int numSegments = 5;
+  int iStart[] = {0, 31, 62, 100, 124};
+  int segmentLength[] = {31, 31, 38, 24, 21};
+  bool reverse[] = {0, 1, 1, 0, 1};
+
+  int sum = 0;
+  for (int band = 0; band < numBands; band++) {
+    uint8_t barHeight = barHeights[band];
+    sum += barHeight;
+  }
+
+  for (int s = 0; s < numSegments; s++) {
+    int height = map(sum, 0, NUM_LEDS, 0, segmentLength[s]);
+    for (int x = 0; x < height; x++) {
+      int hue = map(x, 0, segmentLength[s], 0, 255);
+      if (reverse[s]) {
+        leds[iStart[s] + segmentLength[s] - 1 - x] = CHSV(hue, 255, 255);
+      } else {
+        leds[iStart[s] + x] = CHSV(hue, 255, 255);
+      }
+    }
+  }
+}
+
+void purpleBars(int band, int barHeight) {
+  // int xStart = barWidth * band;
+  // for (int x = xStart; x < xStart + barWidth; x++) {
+  //   for (int y = 0; y < barHeight; y++) {
+  //     //leds(x, y) = ColorFromPalette(purplePal, y * (255 / barHeight));
+  //   }
+  // }
+  //  from the beginning of each segment
+  int iStart = M_WIDTH * band;
+  for (int i = iStart; i < iStart + barHeight; i++) {
+    leds[i] = ColorFromPalette(purplePal, band * (255 / barHeight));
   }
 }
 
@@ -335,7 +414,7 @@ void changingBars(int band, int barHeight) {
   int xStart = barWidth * band;
   for (int x = xStart; x < xStart + barWidth; x++) {
     for (int y = 0; y < barHeight; y++) {
-      //leds(x, y) = CHSV(y * (255 / M_HEIGHT) + colorTimer, 255, 255);
+      // leds(x, y) = CHSV(y * (255 / M_HEIGHT) + colorTimer, 255, 255);
     }
   }
 }
@@ -348,7 +427,7 @@ void centerBars(int band, int barHeight) {
     int yStart = ((M_HEIGHT - barHeight) / 2);
     for (int y = yStart; y <= (yStart + barHeight); y++) {
       int colorIndex = constrain((y - yStart) * (255 / barHeight), 0, 255);
-      //leds(x, y) = ColorFromPalette(heatPal, colorIndex);
+      // leds(x, y) = ColorFromPalette(heatPal, colorIndex);
     }
   }
 }
@@ -357,7 +436,7 @@ void whitePeak(int band) {
   int xStart = barWidth * band;
   int peakHeight = peak[band];
   for (int x = xStart; x < xStart + barWidth; x++) {
-    //leds(x, peakHeight) = CRGB::White;
+    // leds(x, peakHeight) = CRGB::White;
   }
 }
 
@@ -365,8 +444,8 @@ void outrunPeak(int band) {
   int xStart = barWidth * band;
   int peakHeight = peak[band];
   for (int x = xStart; x < xStart + barWidth; x++) {
-    //leds(x, peakHeight) =
-        ColorFromPalette(outrunPal, peakHeight * (255 / M_HEIGHT));
+    // leds(x, peakHeight) =
+    ColorFromPalette(outrunPal, peakHeight * (255 / M_HEIGHT));
   }
 }
 
@@ -374,8 +453,8 @@ void createWaterfall(int band) {
   int xStart = barWidth * band;
   // Draw bottom line
   for (int x = xStart; x < xStart + barWidth; x++) {
-    //leds(x, 0) =
-        CHSV(constrain(map(fftResult[band], 0, 254, 160, 0), 0, 160), 255, 255);
+    // leds(x, 0) =
+    CHSV(constrain(map(fftResult[band], 0, 254, 160, 0), 0, 160), 255, 255);
   }
 }
 
@@ -383,7 +462,7 @@ void moveWaterfall() {
   // Move screen up starting at 2nd row from top
   for (int y = M_HEIGHT - 2; y >= 0; y--) {
     for (int x = 0; x < M_WIDTH; x++) {
-      //leds(x, y + 1) = leds(x, y);
+      // leds(x, y + 1) = leds(x, y);
     }
   }
 }
