@@ -303,7 +303,9 @@ void barSum() {
 }
 
 void barSumRibCage() {
+  int numStrands = 4;
   int numLEDs = 100;
+  int offset = 1;
 
   int sum = 0;
   for (int band = 0; band < numBands; band++) {
@@ -312,12 +314,14 @@ void barSumRibCage() {
   }
 
   int height = map(sum, 0, NUM_LEDS, 0, numLEDs);
-  for (int x = 0; x < height; x++) {
-    int hue = map(x, 0, numLEDs, 0, 255);
-    leds[x + 1] = CRGB(hue, 0, 0);
-    leds[x + 26] = CRGB(hue, 0, 0);
-    leds[x + 51] = CRGB(hue, 0, 0);
-    leds[x + 75] = CRGB(hue, 0, 0);
+  for (int s = 0; s < numStrands; s++) {
+    for (int x = 0; x < height; x++) {
+      int hue = map(x, 0, numLEDs, 0, 255);
+      int index = x + (s * 25) + offset;
+      if (index < numLEDs) {
+        leds[index] = CRGB(hue, 0, 0);
+      }
+    }
   }
 }
 
