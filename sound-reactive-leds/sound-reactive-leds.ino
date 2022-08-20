@@ -43,6 +43,7 @@
 #include <LEDMatrix.h>
 #include <LEDText.h>
 
+#include "Timer.h"
 #include "colors.h"
 
 #define EEPROM_SIZE 5
@@ -66,16 +67,21 @@
 #define DEFAULT_GAIN 30
 #define DEFAULT_SQUELCH 9
 
+#define PATTERN_SOUND 0
+#define PATTERN_TWINKLE 1
+#define PATTERN_PRIDE 2
+#define PATTERN_HEARTBEAT 3
+#define PATTERN_SOLID 4
+#define NUM_PATTERNS 5
+
 uint8_t numBands;
 uint8_t barWidth;
 uint8_t pattern;
 uint8_t brightness;
 uint16_t displayTime;
-bool autoChangePatterns = false;
 int buttonState = 0;
 
-int numPatterns = 3;
-CRGB color = CRGB::Red;
+CRGB knobColor = CRGB::Red;
 
 CRGB leds[NUM_LEDS];
 
@@ -163,15 +169,18 @@ void setup() {
 void loop() {
   cycleColorPalette();
 
-  FastLED.clear();
-  // fadeToBlackBy(leds, 100, 20);
+  if (pattern == PATTERN_HEARTBEAT) {
+    fadeToBlackBy(leds, 100, 10);
+  } else {
+    FastLED.clear();
+  }
 
   // Read button and potentiometers
   EVERY_N_MILLISECONDS(100) {
     int buttonRead = digitalRead(BUTTON_PIN);
     if (buttonRead == HIGH && buttonState == 0) {
       buttonState = 1;
-      pattern = (pattern + 1) % numPatterns; // Increment pattern
+      pattern = (pattern + 1) % NUM_PATTERNS; // Increment pattern
       Serial.print("pattern: ");
       Serial.println(pattern);
     } else if (buttonRead == LOW && buttonState == 1) {
@@ -179,17 +188,17 @@ void loop() {
     }
 
     int value = analogRead(SQUELCH_PIN);
-    Serial.print("value: ");
-    Serial.println(value);
-    if (pattern != 2) {
+    // Serial.print("value: ");
+    // Serial.println(value);
+    if (pattern == PATTERN_SOUND) {
       squelch = map(value, 4095, 1000, 0, 30);
-      Serial.print("squelch: ");
-      Serial.println(squelch);
+      // Serial.print("squelch: ");
+      // Serial.println(squelch);
     } else {
       int hue = map(value, 4095, 1000, 0, 255);
-      Serial.print("hue: ");
-      Serial.println(hue);
-      color = CHSV(hue, 255, 255);
+      // Serial.print("hue: ");
+      // Serial.println(hue);
+      // knobColor = CHSV(hue, 255, 255);
     }
     brightness = map(analogRead(BRIGHTNESS_PIN), 4095, 0, 0, 255);
     gain = map(analogRead(GAIN_PIN), 4095, 0, 0, 30);
@@ -238,12 +247,6 @@ void loop() {
     EEPROM.commit();
   }
 
-  EVERY_N_SECONDS_I(timingObj, displayTime) {
-    timingObj.setPeriod(displayTime);
-    if (autoChangePatterns)
-      pattern = (pattern + 1) % 6;
-  }
-
   FastLED.setBrightness(brightness);
   FastLED.show();
   delay(10);
@@ -257,15 +260,21 @@ void drawPatterns() {
   // barSumBike();
 
   switch (pattern) {
-  case 0:
+  case PATTERN_SOUND:
     barSumRibCage();
     break;
-  case 1:
+  case PATTERN_TWINKLE:
     twinkle();
     break;
-  default:
+  case PATTERN_PRIDE:
+    pride();
+    break;
+  case PATTERN_HEARTBEAT:
+    heartbeat();
+    break;
+  default: // PATTERN_SOLID
     for (int i = 0; i < NUM_LEDS; i++) {
-      leds[i] = color;
+      leds[i] = knobColor;
     }
     break;
   }
@@ -341,16 +350,9 @@ void barSumRibCage() {
     for (int x = 0; x < height; x++) {
       int index = x + (s * 25) + offset;
       if (index < numLEDs) {
-        // int hue = map(x, 0, numLEDs, 0, 255);
-        // leds[index] = CRGB(hue, 0, 0);
-
         int brightness = map(x, 0, numLEDs, 0, 255);
         CRGB color = ColorFromPalette(currentPalette, brightness);
         leds[index] = color.nscale8(255 - brightness);
-
-        // int brightness = map(x, 0, numLEDs, 0, 255);
-        // CRGB color = CRGB::Gold;
-        // leds[index] = color.nscale8(255 - brightness);
       }
     }
   }
