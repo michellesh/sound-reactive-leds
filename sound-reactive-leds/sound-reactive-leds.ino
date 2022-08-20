@@ -81,35 +81,15 @@ uint8_t brightness;
 uint16_t displayTime;
 int buttonState = 0;
 
-CRGB knobColor = CRGB::Red;
+CRGB knobColors[] = {CRGB::Maroon, CRGB::Orchid, CRGB::Turquoise, CRGB::White,
+                      CRGB::FairyLight};
+CRGB knobColor = knobColors[0];
 
 CRGB leds[NUM_LEDS];
 
 uint8_t peak[] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
 uint8_t prevFFTValue[] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
 uint8_t barHeights[] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
-
-// Colors and palettes
-DEFINE_GRADIENT_PALETTE(purple_gp){0,   0,   212, 255,     // blue
-                                   255, 179, 0,   255};    // purple
-DEFINE_GRADIENT_PALETTE(outrun_gp){0,   141, 0,   100,     // purple
-                                   127, 255, 192, 0,       // yellow
-                                   255, 0,   5,   255};    // blue
-DEFINE_GRADIENT_PALETTE(greenblue_gp){0,   0, 255, 60,     // green
-                                      64,  0, 236, 255,    // cyan
-                                      128, 0, 5,   255,    // blue
-                                      192, 0, 236, 255,    // cyan
-                                      255, 0, 255, 60};    // green
-DEFINE_GRADIENT_PALETTE(redyellow_gp){0,   200, 200, 200,  // white
-                                      64,  255, 218, 0,    // yellow
-                                      128, 231, 0,   0,    // red
-                                      192, 255, 218, 0,    // yellow
-                                      255, 200, 200, 200}; // white
-CRGBPalette16 purplePal = purple_gp;
-CRGBPalette16 outrunPal = outrun_gp;
-CRGBPalette16 greenbluePal = greenblue_gp;
-CRGBPalette16 heatPal = redyellow_gp;
-uint8_t colorTimer = 0;
 
 int MAX_BRIGHTNESS = 255;
 
@@ -189,8 +169,9 @@ void loop() {
     if (pattern == PATTERN_SOUND) {
       squelch = map(value, 4095, 0, 0, 30);
     } else {
-      int hue = map(value, 4095, 0, 0, 255);
-      knobColor = CHSV(hue, 255, 255);
+      int numColors = sizeof(knobColors) / sizeof(knobColors[0]);
+      int colorIndex = map(value, 4095, 0, 0, numColors - 1);
+      knobColor = knobColors[colorIndex];
     }
     brightness = map(analogRead(BRIGHTNESS_PIN), 4095, 0, 0, 255);
     gain = map(analogRead(GAIN_PIN), 4095, 0, 0, 30);

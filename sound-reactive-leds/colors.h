@@ -1,28 +1,10 @@
 #define SECONDS_PER_PALETTE 10
 
-/*
-DEFINE_GRADIENT_PALETTE(_firePalette){0,   0,   0,   0,  // black
-                                      128, 255, 0,   0,  // red
-                                      200, 255, 140, 0,  // CRGB::Orange
-                                      255, 255, 215, 0}; // CRGB::Gold
-CRGBPalette16 firePalette = _firePalette;
-*/
-/*
-DEFINE_GRADIENT_PALETTE(_firePalette){0,   255, 0,   0,  // CRGB::Red
-                                      50,  139, 0,   0,  // CRGB::DarkRed
-                                      100, 0,   0,   0,  // CRGB::Black
-                                      200, 255, 140, 0,  // CRGB::Orange
-                                      255, 255, 215, 0}; // CRGB::Gold
-CRGBPalette16 firePalette = _firePalette;
-*/
-DEFINE_GRADIENT_PALETTE(_firePalette){0,   255, 0,   0,  // CRGB::Red
-                                      127, 255, 215, 0,   // CRGB::Gold
-                                      255, 0,   0,   0};  // CRGB::Black
-CRGBPalette16 firePalette = _firePalette;
-
-DEFINE_GRADIENT_PALETTE(_goldPalette){0,   255, 215, 0,   // CRGB::Gold
-                                      255, 0,   0,   0};  // CRGB::Black
-CRGBPalette16 goldPalette = _goldPalette;
+DEFINE_GRADIENT_PALETTE(_redRoseOrchid){0,   128, 0,   0,    // CRGB::Maroon
+                                        85,  210, 105, 30,   // CRGB::Chocolate
+                                        170, 255, 127, 80,   // CRGB::Coral
+                                        255, 218, 112, 214}; // CRGB::Orchid
+CRGBPalette16 redRoseOrchid = _redRoseOrchid;
 
 DEFINE_GRADIENT_PALETTE(_tealGreenGold){0,   34,  139, 34, // CRGB::ForestGreen
                                         85,  0,   255, 0,  // CRGB::Lime
@@ -30,11 +12,11 @@ DEFINE_GRADIENT_PALETTE(_tealGreenGold){0,   34,  139, 34, // CRGB::ForestGreen
                                         255, 255, 140, 0}; // CRGB::DarkOrange
 CRGBPalette16 tealGreenGold = _tealGreenGold;
 
-DEFINE_GRADIENT_PALETTE(_redRoseLavendar){0,   128, 0,   0,  // CRGB::Maroon
-                                          85,  210, 105, 30, // CRGB::Chocolate
-                                          170, 255, 127, 80, // CRGB::Coral
-                                          255, 230, 230, 250}; // CRGB::Lavender
-CRGBPalette16 redRoseLavendar = _redRoseLavendar;
+DEFINE_GRADIENT_PALETTE(_firePalette){0,   255, 0,   0,  // CRGB::Red
+                                      85,  255, 140, 0,  // CRGB::Orange
+                                      170, 255, 215, 0,  // CRGB::Gold
+                                      255, 0,   0,   0}; // CRGB::Black
+CRGBPalette16 firePalette = _firePalette;
 
 DEFINE_GRADIENT_PALETTE(_icePalette){0,   224, 240, 255, // light blue
                                      127, 31,  147, 255, // medium blue
@@ -49,10 +31,9 @@ CRGBPalette16 fairyPalette = _fairyPalette;
 
 // clang-format off
 CRGBPalette16* activePalettes[] = {
-  //&goldPalette,
-  //&firePalette,
-  &redRoseLavendar,
+  &redRoseOrchid,
   &tealGreenGold,
+  &firePalette,
   &fairyPalette,
   &icePalette
 };
