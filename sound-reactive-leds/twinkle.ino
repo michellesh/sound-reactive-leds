@@ -17,7 +17,7 @@ void twinkle() {
   uint16_t PRNG16 = 11337;
   uint32_t clock32 = millis();
 
-  for (uint8_t i = 0; i < 100; i++) {
+  for (uint8_t i = 0; i < STRAND_LENGTH; i++) {
     // Use pseudo random number generator to get values for the clock speed
     // adjustment and clock offset of this pixel
     PRNG16 = (uint16_t)(PRNG16 * 2053) + 1384; // next 'random' number
@@ -36,12 +36,8 @@ void twinkle() {
     // on the "brightness = f( time )" idea.
     uint8_t brightness = getBrightness(myclock30, myunique8);
 
-    // CRGB color = palette.getColor(d, p).nscale8(brightness *
-    //                                             getPercentBrightness() /
-    //                                             100);
-    // discs[d].setBlend(p, color, brightness);
-    int paletteIndex = map(i, 0, 100, 0, 255);
-    CRGB color = ColorFromPalette(currentPalette, paletteIndex); // CRGB::Red;
+    int paletteIndex = map(i, 0, STRAND_LENGTH, 0, 255);
+    CRGB color = ColorFromPalette(currentPalette, paletteIndex);
     leds[i] = color.nscale8(brightness);
   }
 }

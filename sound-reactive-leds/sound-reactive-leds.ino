@@ -74,6 +74,8 @@
 #define PATTERN_SOLID 4
 #define NUM_PATTERNS 5
 
+#define STRAND_LENGTH 100
+
 uint8_t numBands;
 uint8_t barWidth;
 uint8_t pattern;
@@ -123,25 +125,10 @@ void setup() {
     EEPROM.commit();
   }
 
-  /*
-    // Read saved values from EEPROM
-    FastLED.setBrightness(EEPROM.read(EEPROM_BRIGHTNESS));
-    brightness = FastLED.getBrightness();
-    Serial.print("brightness: ");
-    Serial.println(brightness);
-    gain = EEPROM.read(EEPROM_GAIN);
-    Serial.print("gain: ");
-    Serial.println(gain);
-    squelch = EEPROM.read(EEPROM_SQUELCH);
-    Serial.print("squelch: ");
-    Serial.println(squelch);
-    pattern = EEPROM.read(EEPROM_PATTERN);
-    displayTime = EEPROM.read(EEPROM_DISPLAY_TIME);
-  */
   brightness = DEFAULT_BRIGHTNESS;
   gain = DEFAULT_GAIN;
   squelch = DEFAULT_SQUELCH;
-  pattern = 0;
+  pattern = PATTERN_SOUND;
 
   pinMode(BUTTON_PIN, INPUT);
 }
@@ -150,7 +137,7 @@ void loop() {
   cycleColorPalette();
 
   if (pattern == PATTERN_HEARTBEAT) {
-    fadeToBlackBy(leds, 100, 10);
+    fadeToBlackBy(leds, STRAND_LENGTH, 10);
   } else {
     FastLED.clear();
   }
@@ -309,7 +296,6 @@ void barSum() {
 
 void barSumRibCage() {
   int numStrands = 4;
-  int numLEDs = 100;
   int offset = 2;
 
   int sum = 0;
@@ -318,57 +304,18 @@ void barSumRibCage() {
     sum += barHeight;
   }
 
-  int height = map(sum, 0, NUM_LEDS, 0, numLEDs);
+  int height = map(sum, 0, NUM_LEDS, 0, STRAND_LENGTH);
   for (int s = 0; s < numStrands; s++) {
     for (int x = 0; x < height; x++) {
       int index = x + (s * 25) + offset;
-      if (index < numLEDs) {
-        int brightness = map(x, 0, numLEDs, 0, 255);
+      if (index < STRAND_LENGTH) {
+        int brightness = map(x, 0, STRAND_LENGTH, 0, 255);
         CRGB color = ColorFromPalette(currentPalette, brightness);
         leds[index] = color.nscale8(255 - brightness);
       }
     }
   }
 }
-
-/*
-void barSumRibCage() {
-  int numLEDs = 100;
-  int offset = 2;
-  int numStrands = 4;
-  //int iStart[] = {2, 27, 52, 77};
-  int strandLength = 25;
-
-  int sum = 0;
-  for (int band = 0; band < numBands; band++) {
-    uint8_t barHeight = barHeights[band];
-    sum += barHeight;
-  }
-  int height = map(sum, 0, NUM_LEDS, 0, numLEDs);
-
-  //for (int s = 0; s < numStrands; s++) {
-    for (int i = 0; i < height; i++) {
-      int hue = map(i, 0, numLEDs, 0, 255);
-      leds[i + 1] = CRGB(hue, 0, 0);
-      leds[i + 26] = CRGB(hue, 0, 0);
-      leds[i + 51] = CRGB(hue, 0, 0);
-      leds[i + 75] = CRGB(hue, 0, 0);
-
-      //int index = i + (s * strandLength) + offset;
-      //if (index < numLEDs) {
-      //  //leds[index] =  ColorFromPalette(currentPalette, hue);
-      //  leds[index] = CRGB(hue, 0, 0);
-      //}
-      //leds[iStart[s] + i + 25 + offset] = ColorFromPalette(currentPalette,
-hue);
-      //leds[iStart[s] + i + 50 + offset] = ColorFromPalette(currentPalette,
-hue);
-      //leds[iStart[s] + i + 75 + offset] = ColorFromPalette(currentPalette,
-hue);
-    }
-  //}
-}
-*/
 
 void barSumBike() {
   int numLeds = 145;

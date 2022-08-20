@@ -20,7 +20,7 @@ void pride() {
   sHue16 += deltams * beatsin88(400, 5, 9);
   uint16_t brightnesstheta16 = sPseudotime;
 
-  for (uint16_t i = 0; i < 100; i++) {
+  for (uint16_t i = 0; i < STRAND_LENGTH; i++) {
     hue16 += hueinc16;
     uint8_t hue8 = hue16 / 256;
 

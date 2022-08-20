@@ -4,7 +4,7 @@ Timer beat = {firstBeat};
 
 void heartbeat() {
   if (beat.complete()) {
-    for (uint16_t i = 0; i < 100; i++) {
+    for (uint16_t i = 0; i < STRAND_LENGTH; i++) {
       if ((i % 25 >= 13 && beat.totalCycleTime == firstBeat) ||
           (i % 25 < 13 && beat.totalCycleTime == secondBeat)) {
         leds[i] = knobColor;
