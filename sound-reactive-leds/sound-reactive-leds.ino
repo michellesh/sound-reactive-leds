@@ -60,7 +60,7 @@
 
 #define BRIGHTNESS_PIN 13
 #define GAIN_PIN 12
-#define SQUELCH_PIN 26
+#define SQUELCH_PIN 27
 #define BUTTON_PIN 25
 
 #define DEFAULT_BRIGHTNESS 100
@@ -181,24 +181,16 @@ void loop() {
     if (buttonRead == HIGH && buttonState == 0) {
       buttonState = 1;
       pattern = (pattern + 1) % NUM_PATTERNS; // Increment pattern
-      Serial.print("pattern: ");
-      Serial.println(pattern);
     } else if (buttonRead == LOW && buttonState == 1) {
       buttonState = 0;
     }
 
     int value = analogRead(SQUELCH_PIN);
-    // Serial.print("value: ");
-    // Serial.println(value);
     if (pattern == PATTERN_SOUND) {
-      squelch = map(value, 4095, 1000, 0, 30);
-      // Serial.print("squelch: ");
-      // Serial.println(squelch);
+      squelch = map(value, 4095, 0, 0, 30);
     } else {
-      int hue = map(value, 4095, 1000, 0, 255);
-      // Serial.print("hue: ");
-      // Serial.println(hue);
-      // knobColor = CHSV(hue, 255, 255);
+      int hue = map(value, 4095, 0, 0, 255);
+      knobColor = CHSV(hue, 255, 255);
     }
     brightness = map(analogRead(BRIGHTNESS_PIN), 4095, 0, 0, 255);
     gain = map(analogRead(GAIN_PIN), 4095, 0, 0, 30);
