@@ -62,6 +62,10 @@
 #define SQUELCH_PIN 26
 #define BUTTON_PIN 25
 
+#define DEFAULT_BRIGHTNESS 100
+#define DEFAULT_GAIN 30
+#define DEFAULT_SQUELCH 9
+
 uint8_t numBands;
 uint8_t barWidth;
 uint8_t pattern;
@@ -71,6 +75,7 @@ bool autoChangePatterns = false;
 int buttonState = 0;
 
 int numPatterns = 3;
+CRGB color = CRGB::Red;
 
 CRGB leds[NUM_LEDS];
 
@@ -132,19 +137,25 @@ void setup() {
     EEPROM.commit();
   }
 
-  // Read saved values from EEPROM
-  FastLED.setBrightness(EEPROM.read(EEPROM_BRIGHTNESS));
-  brightness = FastLED.getBrightness();
-  Serial.print("brightness: ");
-  Serial.println(brightness);
-  gain = EEPROM.read(EEPROM_GAIN);
-  Serial.print("gain: ");
-  Serial.println(gain);
-  squelch = EEPROM.read(EEPROM_SQUELCH);
-  Serial.print("squelch: ");
-  Serial.println(squelch);
-  pattern = EEPROM.read(EEPROM_PATTERN);
-  displayTime = EEPROM.read(EEPROM_DISPLAY_TIME);
+  /*
+    // Read saved values from EEPROM
+    FastLED.setBrightness(EEPROM.read(EEPROM_BRIGHTNESS));
+    brightness = FastLED.getBrightness();
+    Serial.print("brightness: ");
+    Serial.println(brightness);
+    gain = EEPROM.read(EEPROM_GAIN);
+    Serial.print("gain: ");
+    Serial.println(gain);
+    squelch = EEPROM.read(EEPROM_SQUELCH);
+    Serial.print("squelch: ");
+    Serial.println(squelch);
+    pattern = EEPROM.read(EEPROM_PATTERN);
+    displayTime = EEPROM.read(EEPROM_DISPLAY_TIME);
+  */
+  brightness = DEFAULT_BRIGHTNESS;
+  gain = DEFAULT_GAIN;
+  squelch = DEFAULT_SQUELCH;
+  pattern = 0;
 
   pinMode(BUTTON_PIN, INPUT);
 }
@@ -152,15 +163,11 @@ void setup() {
 void loop() {
   cycleColorPalette();
 
-   FastLED.clear();
-  //fadeToBlackBy(leds, 100, 20);
+  FastLED.clear();
+  // fadeToBlackBy(leds, 100, 20);
 
   // Read button and potentiometers
   EVERY_N_MILLISECONDS(100) {
-    brightness = map(analogRead(BRIGHTNESS_PIN), 4095, 0, 0, 255);
-    gain = map(analogRead(GAIN_PIN), 4095, 0, 0, 30);
-    squelch = map(analogRead(SQUELCH_PIN), 4095, 0, 0, 30);
-
     int buttonRead = digitalRead(BUTTON_PIN);
     if (buttonRead == HIGH && buttonState == 0) {
       buttonState = 1;
@@ -170,6 +177,22 @@ void loop() {
     } else if (buttonRead == LOW && buttonState == 1) {
       buttonState = 0;
     }
+
+    int value = analogRead(SQUELCH_PIN);
+    Serial.print("value: ");
+    Serial.println(value);
+    if (pattern != 2) {
+      squelch = map(value, 4095, 1000, 0, 30);
+      Serial.print("squelch: ");
+      Serial.println(squelch);
+    } else {
+      int hue = map(value, 4095, 1000, 0, 255);
+      Serial.print("hue: ");
+      Serial.println(hue);
+      color = CHSV(hue, 255, 255);
+    }
+    brightness = map(analogRead(BRIGHTNESS_PIN), 4095, 0, 0, 255);
+    gain = map(analogRead(GAIN_PIN), 4095, 0, 0, 30);
   }
 
   uint8_t divisor = 1; // If 8 bands, we need to divide things by 2
@@ -242,7 +265,7 @@ void drawPatterns() {
     break;
   default:
     for (int i = 0; i < NUM_LEDS; i++) {
-      leds[i] = CRGB::Red;
+      leds[i] = color;
     }
     break;
   }
@@ -305,7 +328,7 @@ void barSum() {
 void barSumRibCage() {
   int numStrands = 4;
   int numLEDs = 100;
-  int offset = 1;
+  int offset = 2;
 
   int sum = 0;
   for (int band = 0; band < numBands; band++) {
@@ -316,10 +339,18 @@ void barSumRibCage() {
   int height = map(sum, 0, NUM_LEDS, 0, numLEDs);
   for (int s = 0; s < numStrands; s++) {
     for (int x = 0; x < height; x++) {
-      int hue = map(x, 0, numLEDs, 0, 255);
       int index = x + (s * 25) + offset;
       if (index < numLEDs) {
-        leds[index] = CRGB(hue, 0, 0);
+        // int hue = map(x, 0, numLEDs, 0, 255);
+        // leds[index] = CRGB(hue, 0, 0);
+
+        int brightness = map(x, 0, numLEDs, 0, 255);
+        CRGB color = ColorFromPalette(currentPalette, brightness);
+        leds[index] = color.nscale8(255 - brightness);
+
+        // int brightness = map(x, 0, numLEDs, 0, 255);
+        // CRGB color = CRGB::Gold;
+        // leds[index] = color.nscale8(255 - brightness);
       }
     }
   }
@@ -353,9 +384,12 @@ void barSumRibCage() {
       //  //leds[index] =  ColorFromPalette(currentPalette, hue);
       //  leds[index] = CRGB(hue, 0, 0);
       //}
-      //leds[iStart[s] + i + 25 + offset] = ColorFromPalette(currentPalette, hue);
-      //leds[iStart[s] + i + 50 + offset] = ColorFromPalette(currentPalette, hue);
-      //leds[iStart[s] + i + 75 + offset] = ColorFromPalette(currentPalette, hue);
+      //leds[iStart[s] + i + 25 + offset] = ColorFromPalette(currentPalette,
+hue);
+      //leds[iStart[s] + i + 50 + offset] = ColorFromPalette(currentPalette,
+hue);
+      //leds[iStart[s] + i + 75 + offset] = ColorFromPalette(currentPalette,
+hue);
     }
   //}
 }

@@ -7,12 +7,22 @@ DEFINE_GRADIENT_PALETTE(_firePalette){0,   0,   0,   0,  // black
                                       255, 255, 215, 0}; // CRGB::Gold
 CRGBPalette16 firePalette = _firePalette;
 */
+/*
 DEFINE_GRADIENT_PALETTE(_firePalette){0,   255, 0,   0,  // CRGB::Red
                                       50,  139, 0,   0,  // CRGB::DarkRed
                                       100, 0,   0,   0,  // CRGB::Black
                                       200, 255, 140, 0,  // CRGB::Orange
                                       255, 255, 215, 0}; // CRGB::Gold
 CRGBPalette16 firePalette = _firePalette;
+*/
+DEFINE_GRADIENT_PALETTE(_firePalette){0,   255, 0,   0,  // CRGB::Red
+                                      127, 255, 215, 0,   // CRGB::Gold
+                                      255, 0,   0,   0};  // CRGB::Black
+CRGBPalette16 firePalette = _firePalette;
+
+DEFINE_GRADIENT_PALETTE(_goldPalette){0,   255, 215, 0,   // CRGB::Gold
+                                      255, 0,   0,   0};  // CRGB::Black
+CRGBPalette16 goldPalette = _goldPalette;
 
 DEFINE_GRADIENT_PALETTE(_tealGreenGold){0,   34,  139, 34, // CRGB::ForestGreen
                                         85,  0,   255, 0,  // CRGB::Lime
@@ -39,11 +49,12 @@ CRGBPalette16 fairyPalette = _fairyPalette;
 
 // clang-format off
 CRGBPalette16* activePalettes[] = {
-  &firePalette,
-  //&redRoseLavendar,
-  //&tealGreenGold,
-  //&fairyPalette,
-  //&icePalette
+  //&goldPalette,
+  //&firePalette,
+  &redRoseLavendar,
+  &tealGreenGold,
+  &fairyPalette,
+  &icePalette
 };
 // clang-format on
 
